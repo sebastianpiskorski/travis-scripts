@@ -17,6 +17,6 @@ then
     rm -rf git-lfs-*
 
     # Now that git-lfs is installed we download the screenshots
-    git lfs fetch
+    sudo git lfs fetch
 
 fi
