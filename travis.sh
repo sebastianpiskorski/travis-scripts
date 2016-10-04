@@ -33,24 +33,9 @@ then
         echo ""
         echo "View UI failures (if any) here:"
         echo ""
-        echo "http://builds-artifacts.piwik.org/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/"
+        echo "http://builds-artifacts.piwik.pro/$TRAVIS_REPO_SLUG/$TRAVIS_BRANCH/$TRAVIS_BUILD_NUMBER/"
         echo ""
         echo "If the new screenshots are valid, then you can copy them over to the right directory with the command:"
-
-        echo ""
-        echo -n "./console tests:sync-ui-screenshots $TRAVIS_BUILD_NUMBER"
-        if [ -n "$PLUGIN_NAME" ]
-        then
-            echo -n " --repository=piwik/plugin-$PLUGIN_NAME"
-
-            if [ "$UNPROTECTED_ARTIFACTS" = "" ];
-            then
-                echo -n " --http-user=... --http-password=..."
-            fi
-        fi
-        
-        echo ""
-        echo ""
 
         if [ -n "$PLUGIN_NAME" ]
         then

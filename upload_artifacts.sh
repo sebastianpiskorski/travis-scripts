@@ -1,67 +1,82 @@
 #!/bin/bash
 
+sudo apt-get -y install sshpass
+sudo apt-get -y install rsync
+
+function upload_screenshots_group {
+    CURRENT_SCREENSHOT_DIR_NAME=$1
+    if [ -d ./"$CURRENT_SCREENSHOT_DIR_NAME" ]; then
+        echo ""
+        echo "[NOTE] Processing Screenshots from $CURRENT_SCREENSHOT_DIR_NAME:"
+        ls $CURRENT_SCREENSHOT_DIR_NAME
+        ARCHIVE_NAME="$TRAVIS_BUILD_NUMBER".tar.bz2
+
+        echo "$RELATIVE_REPO_PATH/$CURRENT_SCREENSHOT_DIR_NAME"
+        cp -r $CURRENT_SCREENSHOT_DIR_NAME $RELATIVE_REPO_PATH
+    fi
+}
+
+function copy_diffviewer {
+    cp -r $PIWIK_ROOT_DIR/tests/UI/screenshot-diffs/* $PIWIK_ROOT_DIR/$UI_TESTS_PATH/screenshot-diffs
+}
+
+function archive_and_upload_artifacts {
+    ARCHIVE_NAME=${TRAVIS_REPO_SLUG/PiwikPRO\//}_${TRAVIS_BUILD_NUMBER}.tar.bz2
+    CURRENT_DIR=`pwd`
+
+    cd $RELATIVE_REPO_PATH
+    tar -cjf $ARCHIVE_NAME * --exclude='.gitkeep'
+    cd $CURRENT_DIR
+
+    echo "Uploading Screenshots..."
+    sshpass -e rsync -arROe "ssh -o StrictHostKeyChecking=no" "$RELATIVE_REPO_PATH" artifacts@builds-artifacts.piwik.pro:/var/www/artifacts/
+}
+
+if [ ! $ARTIFACTS_PASS ]; then
+    echo "[WARNING] ARTIFACTS_PASS not set! Set proper variable at https://travis-ci.com/$TRAVIS_REPO_SLUG/settings/"
+    exit
+fi
+export SSHPASS=$ARTIFACTS_PASS
+
 if [ "$TEST_SUITE" = "SystemTests" ];
 then
-    url="http://builds-artifacts.piwik.org/build?auth_key=$ARTIFACTS_PASS&repo=$TRAVIS_REPO_SLUG&artifact_name=system&branch=$TRAVIS_BRANCH&build_id=$TRAVIS_BUILD_NUMBER"
-
     echo "Uploading artifacts for $TEST_SUITE..."
 
     cd ./tests/PHPUnit/System
+    export RELATIVE_REPO_PATH="$TRAVIS_REPO_SLUG"/"$TRAVIS_BRANCH"/"$TRAVIS_BUILD_NUMBER"/"SystemTests"
 
-    # upload processed tarball
-    tar -cjf processed.tar.bz2 processed --exclude='.gitkeep'
-    curl -X POST --data-binary @processed.tar.bz2 "$url"
+    upload_screenshots_group "expected"
+    upload_screenshots_group "processed"
 else
     if [ "$TEST_SUITE" = "UITests" ];
     then
-        url_base="http://builds-artifacts.piwik.org/build?auth_key=$ARTIFACTS_PASS&repo=$TRAVIS_REPO_SLUG&build_id=$TRAVIS_BUILD_NUMBER&build_entity_id=$TRAVIS_BUILD_ID&branch=$TRAVIS_BRANCH"
-
-        if [ -n "$PLUGIN_NAME" ];
-        then
-            if [ "$UNPROTECTED_ARTIFACTS" = "" ];
-            then
-                echo "Artifacts will be protected (premium plugin)..."
-                url_base="$url_base&protected=1"
-            fi
-        fi
-
         echo "Uploading artifacts for $TEST_SUITE..."
 
-        base_dir=`pwd`
         if [ -n "$PLUGIN_NAME" ];
         then
             if [ -d "./plugins/$PLUGIN_NAME/Test/UI" ]; then
-                cd "./plugins/$PLUGIN_NAME/Test/UI"
+                export UI_TESTS_PATH="plugins/$PLUGIN_NAME/Test/UI"
             else
-                cd "./plugins/$PLUGIN_NAME/tests/UI"
+                export UI_TESTS_PATH="plugins/$PLUGIN_NAME/tests/UI"
             fi
         else
-            cd ./tests/UI
+            export UI_TESTS_PATH='tests/UI'
         fi
 
-        echo "[NOTE] Processed Screenshots:"
-        ls processed-ui-screenshots
-        echo ""
+        cd ./$UI_TESTS_PATH
 
-        # upload processed tarball
-        tar -cjf processed-ui-screenshots.tar.bz2 processed-ui-screenshots --exclude='.gitkeep'
-        curl -X POST --data-binary @processed-ui-screenshots.tar.bz2 "$url_base&artifact_name=processed-screenshots"
+        echo "[NOTE] Current path:"
+        echo `pwd`
 
-        # upload diff tarball if it exists
-        cd $base_dir/tests/UI
-        if [ -d "./screenshot-diffs" ];
-        then
-            echo "Uploading artifacts..."
+        export RELATIVE_REPO_PATH="$TRAVIS_REPO_SLUG"/"$TRAVIS_BRANCH"/"$TRAVIS_BUILD_NUMBER"/"UiTests"
+        mkdir -p $RELATIVE_REPO_PATH
 
-            echo "[NOTE] screenshot diff dir:"
-            echo "`pwd`/screenshot-diffs"
+        upload_screenshots_group "expected-ui-screenshots"
+        upload_screenshots_group "processed-ui-screenshots"
+        copy_diffviewer
+        upload_screenshots_group "screenshot-diffs"
 
-            echo "[NOTE] uploading following diffs:"
-            ls screenshot-diffs
-
-            tar -cjf screenshot-diffs.tar.bz2 screenshot-diffs
-            curl -X POST --data-binary @screenshot-diffs.tar.bz2 "$url_base&artifact_name=screenshot-diffs"
-        fi
+        archive_and_upload_artifacts
     else
         echo "No artifacts for $TEST_SUITE tests."
         exit

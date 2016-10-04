@@ -34,7 +34,7 @@ fi
 
 echo "Testing against '$TEST_AGAINST_PIWIK_BRANCH'"
 rm -rf ./tests/travis
-git reset --hard
+
 if ! git checkout "$TEST_AGAINST_PIWIK_BRANCH" --force; then
     echo ""
     echo "Failed to checkout $TEST_AGAINST_PIWIK_BRANCH"
@@ -45,18 +45,20 @@ if ! git checkout "$TEST_AGAINST_PIWIK_BRANCH" --force; then
 
     exit 1
 fi
+echo "Git status after checkout:"
+git status
 
 echo "Initializing submodules"
-git submodule init -q
-git submodule update -q || true
+git submodule init
+git submodule update || true
 
 echo "Making sure travis-scripts submodule is being used"
-if [ ! -d ./tests/travis/.git ]; then
+if [[ ! -d ./tests/travis/.git && ! -f ./tests/travis/.git ]]; then
     echo "Older Piwik w/o travis-scripts submodule, checking out."
 
     rm -rf ./tests/travis
 
-    if ! git clone https://github.com/piwik/travis-scripts.git ./tests/travis; then
+    if ! git clone https://github.com/PiwikPRO/travis-scripts ./tests/travis; then
         exit 1
     fi
 fi
