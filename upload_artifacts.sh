@@ -17,6 +17,7 @@ function upload_screenshots_group {
 }
 
 function copy_diffviewer {
+    mv $PIWIK_ROOT_DIR/tests/UI/screenshot-diffs/diffviewer.html $PIWIK_ROOT_DIR/tests/UI/screenshot-diffs/diffviewer_job-${TRAVIS_JOB_NUMBER}.html
     cp -r $PIWIK_ROOT_DIR/tests/UI/screenshot-diffs/* $PIWIK_ROOT_DIR/$UI_TESTS_PATH/screenshot-diffs
 }
 
