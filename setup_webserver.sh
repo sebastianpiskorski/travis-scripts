@@ -9,7 +9,11 @@ set -e
 DIR=$(dirname "$0")
 DIR=$(realpath "$DIR")
 
-service nginx stop
+if [ "$TRAVIS_SUDO" ]; then
+    sudo service nginx stop
+else
+    service nginx stop
+fi
 
 # Setup PHP-FPM
 echo "Configuring php-fpm"
