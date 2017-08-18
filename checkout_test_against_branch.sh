@@ -32,8 +32,10 @@ elif [[ "$TEST_AGAINST_PIWIK_BRANCH" == "maximum_supported_piwik" && "$PLUGIN_NA
     fi
 fi
 
+echo "Saving travis-scripts from being overwritten by branch checkout"
+mv ./tests/travis ../travis-scripts.save
+
 echo "Testing against '$TEST_AGAINST_PIWIK_BRANCH'"
-rm -rf ./tests/travis
 
 if ! git checkout "$TEST_AGAINST_PIWIK_BRANCH" --force; then
     echo ""
@@ -52,31 +54,6 @@ echo "Initializing submodules"
 git submodule init
 git submodule update || true
 
-echo "Making sure travis-scripts submodule is being used"
-if [[ ! -d ./tests/travis/.git && ! -f ./tests/travis/.git ]]; then
-    echo "Older Piwik w/o travis-scripts submodule, checking out."
-
-    rm -rf ./tests/travis
-
-    if ! git clone https://github.com/PiwikPRO/travis-scripts ./tests/travis; then
-        exit 1
-    fi
-fi
-
-cd tests/travis
-
-echo "Fetching travis-scripts branches"
-git fetch origin
-
-echo "Checking for travis-scripts branch to use..."
-if git ls-remote --exit-code . "origin/$TEST_AGAINST_PIWIK_BRANCH" ; then
-    echo "Found travis-scripts branch or tag corresponding to TEST_AGAINST_PIWIK_BRANCH environment variable, checking out '$TEST_AGAINST_PIWIK_BRANCH' for tests."
-
-    git checkout "origin/$TEST_AGAINST_PIWIK_BRANCH"
-else
-    echo "Available branches:"
-
-    git branch -a
-fi
-
-cd ../..
+echo "Restoring travis-scripts"
+rm -rf ./tests/travis
+mv ../travis-scripts.save ./tests/travis
