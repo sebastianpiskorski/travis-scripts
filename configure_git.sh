@@ -10,5 +10,5 @@ fi
 
 echo "Configuring git [email = $TRAVIS_COMMITTER_EMAIL, user = $TRAVIS_COMMITTER_NAME]..."
 
-git config --global user.email "$TRAVIS_COMMITTER_EMAIL"
-git config --global user.name "$TRAVIS_COMMITTER_NAME"
+sudo git config --global user.email "$TRAVIS_COMMITTER_EMAIL"
+sudo git config --global user.name "$TRAVIS_COMMITTER_NAME"
