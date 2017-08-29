@@ -7,7 +7,6 @@
  */
 
 $pluginName = $argv[1];
-$returnMaxVersion = !empty($argv[2]) && $argv[2] === 'max';
 
 // tiny script to get plugin version from plugin.json from a bash script
 require_once __DIR__ . '/../../core/Version.php';
@@ -22,15 +21,7 @@ $pluginJsonContents = json_decode($pluginJsonContents, true);
 
 $requiredVersions = getRequiredPiwikVersions($pluginJsonContents);
 
-if ($returnMaxVersion) {
-    $versionToReturn = getMaxVersion($requiredVersions);
-
-    if (empty($versionToReturn)) {
-        $versionToReturn = trim(file_get_contents('http://api.piwik.org/LATEST_BETA'));
-    }
-} else {
-    $versionToReturn = getMinVersion($requiredVersions);
-}
+$versionToReturn = getMinVersion($requiredVersions);
 
 if (empty($versionToReturn)) {
     $versionToReturn = "master";
