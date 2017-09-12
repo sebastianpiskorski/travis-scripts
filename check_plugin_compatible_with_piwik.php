@@ -28,7 +28,7 @@ foreach ($requiredVersions as $requiredVersion) {
     if (!empty($version)
         && preg_match("/^[^0-9]*(.*)/", $version, $matches)
         && !empty($matches[1])
-        && version_compare(\Piwik\Version::VERSION, $matches[1]) < 0
+        && !version_compare(\Piwik\Version::VERSION, $matches[1], $comparison)
     ) {
         echo "\n******* Plugin $pluginName's required Piwik ('$comparison$version') is > than the test against version "
             . \Piwik\Version::VERSION . " *******\n";

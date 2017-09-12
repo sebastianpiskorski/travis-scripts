@@ -26,7 +26,7 @@ function getRequiredPiwikVersions($pluginJsonContents)
 
             if (!preg_match("/^[^0-9]*(.*)/", $version)
                 || empty($version)
-                || version_compare($version, \Piwik\Version::VERSION) > 0) {
+            ) {
                 // not a valid version number
                 continue;
             }
@@ -59,29 +59,4 @@ function getMinVersion(array $requiredVersions)
     }
 
     return $minVersion;
-}
-
-function getMaxVersion(array $requiredVersions)
-{
-    $maxVersion = '';
-
-    foreach ($requiredVersions as $required) {
-        $comparison = $required['comparison'];
-        $version    = $required['version'];
-
-        if ($comparison == '<' && $version == '3.0.0-b1') {
-            $maxVersion = trim(file_get_contents('http://api.piwik.org/1.0/getLatestVersion/?release_channel=latest_2x_beta'));
-            continue;
-        }
-
-        if (in_array($comparison, array('<', '<=', '=='))) {
-            if (empty($maxVersion)) {
-                $maxVersion = $version;
-            } elseif (version_compare($version, $maxVersion, '>=')) {
-                $maxVersion = $version;
-            }
-        }
-    }
-
-    return $maxVersion;
 }
